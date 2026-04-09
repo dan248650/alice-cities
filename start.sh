@@ -1,5 +1,5 @@
 #!/bin/bash
-cd alisa-first
+cd alice-cities
 export PORT=5000
 unset PIP_USER
 
