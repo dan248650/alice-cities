@@ -67,7 +67,8 @@ def handle_dialog(req, res):
                 "Не хочу.",
                 "Не буду.",
                 "Отстань!",
-            ]
+            ],
+            'current_animal': 'слона'
         }
         # Заполняем текст ответа
         res['response']['text'] = 'Привет! Купи слона!'
@@ -75,25 +76,30 @@ def handle_dialog(req, res):
         res['response']['buttons'] = get_suggests(user_id)
         return
 
-    # Сюда дойдем только, если пользователь не новый, и разговор с Алисой уже был начат
-    # Обрабатываем ответ пользователя.
-    # В req['request']['original_utterance'] лежит весь текст, что нам прислал пользователь
-    # Если он написал 'ладно', 'куплю', 'покупаю', 'хорошо', то мы считаем, что пользователь не согласился.
-    # Подумайте, все ли в этом фрагменте написано "красиво"?
-    if req['request']['original_utterance'].lower() in [
-        'ладно',
-        'куплю',
-        'покупаю',
-        'хорошо'
-    ]:
-        # Пользователь согласился, прощаемся.
-        res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
-        res['response']['end_session'] = True
+    current_animal = sessionStorage[user_id]["current_animal"]
+
+    user_text = req['request']['original_utterance'].lower()
+
+    agree_keywords = ['ладно', 'куплю', 'покупаю', 'хорошо']
+
+    is_agree = any(keyword in user_text for keyword in agree_keywords)
+    if is_agree:
+        if current_animal == 'слона':
+            sessionStorage[user_id]['current_animal'] = 'кролика'
+            res['response']['text'] = ('Отлично! Слон ваш. '
+                                       'А теперь купи кролика!')
+            res['response']['buttons'] = get_suggests(user_id)
+        else:
+            sessionStorage[user_id]['current_animal'] = 'слона'
+            res['response']['text'] = ('Замечательно! Кролик ваш. '
+                                       'А теперь снова купи слона!')
+            res['response']['buttons'] = get_suggests(user_id)
         return
 
     # Если нет, то убеждаем его купить слона!
-    res['response']['text'] = 'Все говорят "%s", а ты купи слона!' % (
-        req['request']['original_utterance']
+    res['response']['text'] = 'Все говорят "%s", а ты купи %s!' % (
+        req['request']['original_utterance'],
+        current_animal
     )
     res['response']['buttons'] = get_suggests(user_id)
 
