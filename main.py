@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 cities = {
     'москва': ['1656841/4ba1ee6cf5cee2f5c303', '213044/7df73ae4cc715175059e'],
     'нью-йорк': ['1652229/728d5c86707054d4745f', '1030494/aca7ed7acefde2606bdc'],
-    'париж': ["1652229/f77136c2364eb90a3ea8", '123494/aca7ed7acefd12e606bdc']
+    'париж': ["1652229/f77136c2364eb90a3ea8", '1540737/15a652779c8a198a069f']
 }
 
 sessionStorage = {}
@@ -54,6 +54,18 @@ def handle_dialog(res, req):
         }
         return
 
+    tokens = get_tokens(req)
+    if 'помощь' in tokens or 'help' in tokens:
+        help_text = (
+            'Правила игры: я показываю фото города, а ты угадываешь его название. '
+            'После неправильной попытки я дам дополнительное фото. '
+            'Для ответа просто назови город. '
+            'Чтобы продолжить игру, просто ответь на мой вопрос или назови город.'
+        )
+        res['response']['text'] = help_text
+        res['response']['buttons'] = [{'title': 'Помощь', 'hide': False}]
+        return
+
     if sessionStorage[user_id]['first_name'] is None:
         first_name = get_first_name(req)
         if first_name is None:
@@ -70,11 +82,14 @@ def handle_dialog(res, req):
                 {
                     'title': 'Нет',
                     'hide': True
+                },
+                {
+                    'title': 'Помощь',
+                    'hide': False
                 }
             ]
     else:
         if not sessionStorage[user_id]['game_started']:
-            tokens = get_tokens(req)
             if 'да' in tokens:
                 if len(sessionStorage[user_id]['guessed_cities']) == 3:
                     res['response']['text'] = 'Ты отгадал все города!'
@@ -96,6 +111,10 @@ def handle_dialog(res, req):
                     {
                         'title': 'Нет',
                         'hide': True
+                    },
+                    {
+                        'title': 'Помощь',
+                        'hide': False
                     }
                 ]
         else:
@@ -122,12 +141,22 @@ def play_game(res, req):
             res['response']['text'] = 'Правильно! Сыграем ещё?'
             sessionStorage[user_id]['guessed_cities'].append(city)
             sessionStorage[user_id]['game_started'] = False
+            res['response']['buttons'] = [
+                {'title': 'Да', 'hide': True},
+                {'title': 'Нет', 'hide': True},
+                {'title': 'Помощь', 'hide': False}
+            ]
             return
         else:
             if attempt == 3:
                 res['response']['text'] = f'Вы пытались. Это {city.title()}. Сыграем ещё?'
                 sessionStorage[user_id]['game_started'] = False
                 sessionStorage[user_id]['guessed_cities'].append(city)
+                res['response']['buttons'] = [
+                    {'title': 'Да', 'hide': True},
+                    {'title': 'Нет', 'hide': True},
+                    {'title': 'Помощь', 'hide': False}
+                ]
                 return
             else:
                 res['response']['card'] = {}
@@ -137,6 +166,7 @@ def play_game(res, req):
                 res['response']['text'] = 'А вот и не угадал!'
 
     sessionStorage[user_id]['attempt'] += 1
+    res['response']['buttons'] = [{'title': 'Помощь', 'hide': False}]
 
 
 def get_tokens(req):
