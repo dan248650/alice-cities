@@ -203,25 +203,26 @@ def play_game(res, req):
                 {
                     'title': 'Посмотреть на карте',
                     'url': map_url,
-                    'hide': True
+                    'hide': True,
+                    'payload': {}
                 }
             ]
             return
         else:
             if attempt == 3:
+                map_url = f"https://yandex.ru/maps/?mode=search&text={city}"
                 res['response'][
                     'text'] = f'{name_address}Вы пытались. Это {city.title()}. А теперь скажи, в какой стране находится этот город?'
                 sessionStorage[user_id]['game_started'] = False
                 sessionStorage[user_id]['last_city'] = city
                 sessionStorage[user_id]['awaiting_country'] = True
-
-                map_url = f"https://yandex.ru/maps/?mode=search&text={city}"
                 res['response']['buttons'] = [
                     {'title': 'Помощь', 'hide': False},
                     {
                         'title': 'Посмотреть на карте',
                         'url': map_url,
-                        'hide': True
+                        'hide': True,
+                        'payload': {}
                     }
                 ]
                 return
