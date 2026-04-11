@@ -147,15 +147,17 @@ def handle_dialog(res, req):
 
 def is_map_button_pressed(req):
     try:
-        command = req['request'].get('command', '').lower()
-        original = req['request'].get('original_utterance', '').lower()
+        if 'payload' in req['request'] and req['request']['payload']:
+            return True
 
-        if 'payload' in req['request']:
-            payload = req['request']['payload']
-            if payload and isinstance(payload, dict):
-                return True
+        command = req['request'].get('command', '').lower().strip()
+        original = req['request'].get('original_utterance', '').lower().strip()
 
-        if not command or command in ['посмотреть на карте', 'карта', 'на карте']:
+        if not command and not original:
+            return True
+
+        map_keywords = ['посмотреть на карте', 'карта', 'открыть карту', 'показать на карте']
+        if command in map_keywords or original in map_keywords:
             return True
 
         return False
