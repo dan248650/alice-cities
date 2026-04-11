@@ -203,7 +203,7 @@ def play_game(res, req):
                 {
                     'title': 'Посмотреть на карте',
                     'url': map_url,
-                    'hide': False
+                    'hide': True
                 }
             ]
             return
@@ -221,7 +221,7 @@ def play_game(res, req):
                     {
                         'title': 'Посмотреть на карте',
                         'url': map_url,
-                        'hide': False
+                        'hide': True
                     }
                 ]
                 return
