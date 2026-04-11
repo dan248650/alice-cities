@@ -68,6 +68,25 @@ def handle_dialog(res, req):
         return
 
     tokens = get_tokens(req)
+
+    if is_map_button_pressed(req):
+        last_city = sessionStorage[user_id].get('last_city', '')
+        if last_city:
+            map_url = f"https://yandex.ru/maps/?mode=search&text={last_city}"
+            res['response']['text'] = 'В какой стране находится этот город?'
+            res['response']['buttons'] = [
+                {'title': 'Помощь', 'hide': False},
+                {
+                    'title': 'Посмотреть на карте',
+                    'url': map_url,
+                    'hide': True,
+                    'payload': {}
+                }
+            ]
+        else:
+            res['response']['text'] = 'Назови страну, пожалуйста.'
+        return
+
     if 'помощь' in tokens or 'help' in tokens:
         help_text = (
             'Правила игры: я показываю фото города, а ты угадываешь его название. '
@@ -126,6 +145,24 @@ def handle_dialog(res, req):
             play_game(res, req)
 
 
+def is_map_button_pressed(req):
+    try:
+        command = req['request'].get('command', '').lower()
+        original = req['request'].get('original_utterance', '').lower()
+
+        if 'payload' in req['request']:
+            payload = req['request']['payload']
+            if payload and isinstance(payload, dict):
+                return True
+
+        if not command or command in ['посмотреть на карте', 'карта', 'на карте']:
+            return True
+
+        return False
+    except (KeyError, TypeError):
+        return False
+
+
 def handle_country_question(res, req):
     user_id = req['session']['user_id']
     first_name = sessionStorage[user_id]['first_name']
@@ -152,6 +189,21 @@ def handle_country_question(res, req):
                 {'title': 'Помощь', 'hide': False}
             ]
     else:
+        if guessed_country is None and req['request'].get('command', ''):
+            map_url = f"https://yandex.ru/maps/?mode=search&text={last_city}"
+            res['response'][
+                'text'] = f'{name_address}Я не поняла страну. Назови страну, где находится {last_city.title()}.'
+            res['response']['buttons'] = [
+                {'title': 'Помощь', 'hide': False},
+                {
+                    'title': 'Посмотреть на карте',
+                    'url': map_url,
+                    'hide': True,
+                    'payload': {}
+                }
+            ]
+            return
+
         res['response'][
             'text'] = f'{name_address}Неправильно. Правильная страна: {correct_country.title()}. Сыграем ещё?'
         sessionStorage[user_id]['awaiting_country'] = False
